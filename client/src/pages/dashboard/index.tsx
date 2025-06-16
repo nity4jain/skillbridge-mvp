@@ -6,13 +6,13 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      const role = session?.user?.role;
-      if (role === "MENTOR") router.push("/dashboard/mentor");
-      else if (role === "JUNIOR") router.push("/dashboard/junior");
-    }
-  }, [status, session, router]);
+ useEffect(() => {
+  if (session?.user?.role === "junior") {
+    router.push("/dashboard/junior");
+  } else if (session?.user?.role === "mentor") {
+    router.push("/dashboard/mentor");
+  }
+}, [session]);
 
   return <div>Loading dashboard...</div>;
 }
