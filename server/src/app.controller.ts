@@ -1,12 +1,13 @@
-import { Controller, Get, Query } from '@nestjs/common';
-import { JobsService } from './jobs.service';
+// src/app.controller.ts
+import { Controller, Get } from '@nestjs/common';
+import { AppService } from './app.service';
 
-@Controller('api')
+@Controller()
 export class AppController {
-  constructor(private readonly jobsService: JobsService) {}
+  constructor(private readonly appService: AppService) {} // ONLY KEEP AppService here
 
-  @Get('jobs')
-  async getScrapedJobs(@Query('q') q: string = 'frontend developer') {
-    return await this.jobsService.fetchJobsFromSerpAPI(q);
+  @Get()
+  getHello(): string {
+    return this.appService.getHello();
   }
 }

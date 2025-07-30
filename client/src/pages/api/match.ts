@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "./auth/[...nextauth]"; // adjust if needed
-import { prisma } from "../../../prisma/prisma"; // adjust the relative path as needed
+import { authOptions } from "./auth/[...nextauth]";
+import { prisma } from "../../../prisma/prisma"; // adjust path as needed
 
 import type { NextApiRequest, NextApiResponse } from "next";
 
@@ -11,18 +11,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    include: { profile: true }, // assuming you have a separate Profile table or embedded field
-  });
+  const userEmail = session.user?.email;
 
-  if (!user || !user.profile?.summary) {
-    return res.status(400).json({ message: "User profile not found or incomplete" });
+  if (typeof userEmail !== "string") {
+    return res.status(400).json({ message: "User email not found or invalid" });
   }
 
-  const profileText = user.profile.summary;
-
   try {
+    const user = await prisma.user.findUnique({
+      where: { email: userEmail },
+    });
+
+    if (!user || !user.skills) {
+      return res.status(400).json({ message: "User skills not found in database" });
+    }
+
+    const profileText = user.skills;
+
     const response = await fetch("http://localhost:5000/match", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -30,9 +35,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const data = await response.json();
-    return res.status(200).json(data);
-  } catch (err) {
-    console.error("Matching engine error:", err);
-    return res.status(500).json({ message: "Matching engine failed" });
+
+    console.log("AI Matching result:", data);
+
+    if (!Array.isArray(data)) {
+      return res.status(500).json({ message: "Invalid response format from match engine" });
+    }
+
+    return res.status(200).json({ jobs: data });
+  } catch (error) {
+    console.error("Match API error:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 }

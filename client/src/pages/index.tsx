@@ -1,42 +1,32 @@
-import { useEffect, useState } from "react";
+// skillbridge-mvp/client/pages/index.tsx
+
+import { useEffect } from "react";
 import { useSession, signIn } from "next-auth/react";
 import Head from "next/head";
 import styles from "./index.module.css";
 import Image from "next/image";
 import AuthButton from "../components/AuthButton";
 import { Inter } from 'next/font/google';
+import { useRouter } from 'next/router'; // <<<--- ADD THIS IMPORT
 
 const geistSans = Inter({ subsets: ['latin'], variable: '--font-sans' });
 const geistMono = { variable: '' };
 
 export default function Home() {
   const { data: session, status } = useSession();
-  type Job = {
-    title: string;
-    company: string;
-    location: string;
-    // add other fields if needed
-  };
+  const router = useRouter(); // <<<--- INITIALIZE ROUTER
 
-  const [matchedJobs, setMatchedJobs] = useState<Job[]>([]);
-
-  const fetchMatches = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/match", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profile: "junior developer skilled in React and Node.js",
-        }),
-      });
-
-      const jobs = await res.json();
-      console.log("Top matches", jobs);
-      setMatchedJobs(jobs);
-    } catch (err) {
-      console.error("Error fetching matches:", err);
+  // <<<--- NEW: Redirect authenticated users to the analysis page
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/analyze"); // Redirect to your new analysis page
     }
-  };
+  }, [status, router]);
+  // <<<--- END NEW REDIRECT LOGIC
+
+  // REMOVED: type Job = { ... }
+  // REMOVED: const [matchedJobs, setMatchedJobs] = useState<Job[]>([]);
+  // REMOVED: const fetchMatches = async () => { ... } // This logic moves to analyze.tsx if needed, or is replaced by AI analysis
 
   return (
     <>
@@ -76,21 +66,9 @@ export default function Home() {
             </>
           )}
 
+          {/* REMOVED: The 'authenticated' block with Find Matching Jobs button and matchedJobs list */}
           {status === "authenticated" && (
-            <>
-              <p>Welcome, {session.user?.name}! Click below to find jobs.</p>
-              <button onClick={fetchMatches} style={{ marginTop: "20px" }}>
-                Find Matching Jobs
-              </button>
-
-              <ul style={{ marginTop: "20px" }}>
-                {matchedJobs.map((job, index) => (
-                  <li key={index}>
-                    <strong>{job.title}</strong> at {job.company} — {job.location}
-                  </li>
-                ))}
-              </ul>
-            </>
+            <p>Redirecting to your dashboard...</p> // Display this while redirecting
           )}
         </main>
       </div>
