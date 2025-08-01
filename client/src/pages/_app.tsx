@@ -1,7 +1,7 @@
-import "@/styles/globals.css";
+// skillbridge-mvp/client/src/pages/_app.tsx
 import { SessionProvider } from "next-auth/react";
 import type { AppProps } from "next/app";
-import '../styles/globals.css';
+import "../styles/globals.css"; // <<<--- THIS IS THE ONLY, CORRECT IMPORT
 
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   return (
