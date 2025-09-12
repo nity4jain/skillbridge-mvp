@@ -1,8 +1,9 @@
 import React from "react";
 import Head from "next/head";
+import Image from "next/image";
 import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/router";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+//import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -53,11 +54,7 @@ const LandingPage = () => {
               </div>
             </div>
             <div className="lg:w-1/2 flex justify-center lg:justify-end mt-12 lg:mt-0">
-              <img
-                src="/hero-image.png"
-                alt="AI career guidance illustration"
-                className="max-w-md w-full animate-fade-in"
-              />
+              <Image src="/hero-image.png" alt="Hero" width={500} height={300} />
             </div>
           </div>
         </section>
