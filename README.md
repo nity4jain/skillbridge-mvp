@@ -2,10 +2,7 @@
 
 An intelligent, full-stack career development platform that analyzes user resumes, identifies skill gaps, and generates personalized learning roadmaps using the Google Gemini API.
 
-**[Live Demo](https://www.google.com/search?q=https://skillbridge-mvp.vercel.app)**
-
-*(**Note:** You can create a GIF like this using a tool like ScreenToGif or Giphy Capture to showcase your application flow.)*
-
+**[Live Demo]([https://www.google.com/search?q=https://skillbridge-mvp.vercel.app](https://skillbridge-mvp.vercel.app/)**
 -----
 
 ## Key Features
