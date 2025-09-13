@@ -3,14 +3,15 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Toaster, toast } from 'sonner';
-import { useSession, signOut } from 'next-auth/react'; // Import signOut
+import { useSession, signOut } from 'next-auth/react';
+import Link from 'next/link';
 
 // Import Shadcn UI Components
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Label } from "@/components/ui/label"; // Often useful with Input/Textarea
+import { Label } from "@/components/ui/label";
 
 // Define types for the expected API response structure
 type MatchedJob = {
@@ -41,27 +42,31 @@ const AnalyzePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const NESTJS_API_BASE_URL = 'http://localhost:5000/api';
+  const NESTJS_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       setResumeFile(event.target.files[0]);
-      setResumeText(''); // Clear text input if file is chosen
+      setResumeText('');
     }
   };
 
   const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setResumeText(event.target.value);
-    setResumeFile(null); // Clear file input if text is typed
+    setResumeFile(null);
   };
 
   const handleAnalyze = async () => {
+    if (!session?.accessToken) {
+        toast.error('Authentication error. Please log in again.');
+        return;
+    }
+    
     setLoading(true);
     setResults(null);
     setError(null);
 
-    // Basic validation before sending request
-    if (!resumeFile && (!resumeText || resumeText.trim() === '')) {
+    if (!resumeFile && !resumeText.trim()) {
       setError("Please upload a resume file or paste your text.");
       toast.error("No input provided!");
       setLoading(false);
@@ -69,58 +74,61 @@ const AnalyzePage: React.FC = () => {
     }
 
     try {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+      };
+
       let response;
       if (resumeFile) {
-        // Send file to NestJS /api/analysis/file-upload
         const formData = new FormData();
-        formData.append('file', resumeFile); // 'file' must match the field name in NestJS controller
-        response = await axios.post(`${NESTJS_API_BASE_URL}/analysis/file-upload`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data', // Axios handles this automatically for FormData
-          },
-        });
-        toast.success("Resume file uploaded and analyzed!");
-      } else if (resumeText) {
-        // Send text to NestJS /api/analysis/text
-        response = await axios.post(`${NESTJS_API_BASE_URL}/analysis/text`, {
-          content: resumeText, // 'content' must match the DTO property in NestJS
-        });
-        toast.success("Resume text analyzed!");
+        formData.append('file', resumeFile);
+        response = await axios.post(`${NESTJS_API_BASE_URL}/analysis/file-upload`, formData, config);
+        toast.success("Resume file analyzed successfully!");
       } else {
-        return; // Should not reach here 
+        response = await axios.post(`${NESTJS_API_BASE_URL}/analysis/text`, { content: resumeText }, config);
+        toast.success("Resume text analyzed successfully!");
       }
 
-      setResults(response.data as AnalysisResult); // Type assertion for safety
+      setResults(response.data as AnalysisResult);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
+      let errorMessage = "An unknown error occurred.";
+
+      // This is a manual, safe way to check for an Axios error that is guaranteed to work
+      if (typeof err === 'object' && err !== null && 'response' in err) {
+        const axiosError = err as { response?: { data?: { message?: string } }, message?: string };
+        errorMessage = axiosError.response?.data?.message || axiosError.message || "An error occurred with the API request.";
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
       console.error("API call failed:", err);
-      setError(err.response?.data?.message || err.message || "An unknown error occurred.");
-      toast.error("Analysis failed: " + (err.response?.data?.message || err.message));
+      setError(errorMessage);
+      toast.error(`Analysis failed: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
   };
 
-  // Optional: Redirect unauthenticated users or show sign-in prompt
   if (status === "loading") {
     return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-xl">Loading session...</div>;
   }
+
   if (status === "unauthenticated") {
-    // You might have a dedicated login page or show a prompt here
-    // For now, let's just indicate they need to sign in
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-8">
         <h1 className="text-3xl font-bold mb-4">Access Denied</h1>
-        <p className="text-gray-600 mb-6">Please sign in to use SkillBridge's powerful analysis tools.</p>
-        {/* You could add a sign-in button here if not on the main index */}
-        <a href="/" className="text-blue-600 hover:underline">Go to Sign In Page</a>
+        <p className="text-gray-600 mb-6">Please sign in to use SkillBridge&apos;s powerful analysis tools.</p>
+        <Link href="/" className="text-blue-600 hover:underline">Go to Sign In Page</Link>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto p-4 max-w-3xl font-sans bg-gray-50 min-h-screen flex flex-col items-center">
-      <Toaster position="top-right" /> {/* Sonner toast component */}
+      <Toaster position="top-right" />
 
       <Card className="w-full max-w-3xl mt-8 mb-4">
         <CardHeader className="flex flex-row justify-between items-center">
@@ -131,7 +139,6 @@ const AnalyzePage: React.FC = () => {
         <CardDescription className="text-center pb-4">Empowering your career journey with AI-driven insights.</CardDescription>
       </Card>
 
-      {/* Input Section */}
       <Card className="w-full max-w-3xl mb-10 shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl text-gray-800">Your Profile Input</CardTitle>
@@ -147,7 +154,7 @@ const AnalyzePage: React.FC = () => {
                 type="file"
                 accept=".pdf,.docx"
                 onChange={handleFileChange}
-                className="cursor-pointer" // Shadcn Input styles automatically
+                className="cursor-pointer"
               />
             </div>
 
@@ -166,14 +173,14 @@ const AnalyzePage: React.FC = () => {
                 value={resumeText}
                 onChange={handleTextChange}
                 rows={8}
-                placeholder="e.g., 'Experienced Python developer with a strong background in data analysis and machine learning. Proficient in SQL, Docker, and AWS. Seeking roles in data science or backend engineering with a focus on cloud solutions...'"
-                className="min-h-[150px]" // Tailwind class for min height
+                placeholder="e.g., &apos;Experienced Python developer...&apos;"
+                className="min-h-[150px]"
               />
             </div>
 
             <Button
               onClick={handleAnalyze}
-              disabled={loading || (!resumeFile && (!resumeText || resumeText.trim() === ''))}
+              disabled={loading || (!resumeFile && !resumeText.trim())}
               className="w-full bg-gradient-to-r from-blue-600 to-purple-700 text-white font-semibold shadow-lg hover:from-blue-700 hover:to-purple-800 disabled:opacity-60 disabled:cursor-not-allowed transition duration-200 ease-in-out transform hover:scale-105"
             >
               {loading ? (
@@ -192,7 +199,6 @@ const AnalyzePage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Error Display */}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative mb-8 shadow-sm" role="alert">
           <strong className="font-bold">Error:</strong>
@@ -200,7 +206,6 @@ const AnalyzePage: React.FC = () => {
         </div>
       )}
 
-      {/* Results Display */}
       {results && (
         <Card className="w-full max-w-3xl mb-10 shadow-lg">
           <CardHeader>

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import Image from 'next/image';
 
 const LandingPage = () => {
   const { status } = useSession();
@@ -59,10 +60,12 @@ const LandingPage = () => {
               </div>
             </div>
             <div className="lg:w-1/2 flex justify-center lg:justify-end">
-              <img
+              <Image
                 src="/hero-image.png"
                 alt="AI career guidance dashboard"
                 className="max-w-xl w-full rounded-3xl shadow-2xl animate-fade-in"
+                width={500}
+                height={500}
               />
             </div>
           </div>
@@ -129,24 +132,28 @@ const LandingPage = () => {
                 Beyond Keywords. Beyond Resumes.
               </h2>
               <p className="text-lg text-gray-600">
-                Our proprietary AI understands the context and future potential of your skills. It's not just about what you've done, but what you can do next.
+                Our proprietary AI understands the context and future potential of your skills. It&apos;s not just about what you&apos;ve done, but what you can do next.
               </p>
             </div>
             <div>
-              <img
+              <Image
                 src="/placeholder-image-2.svg"
                 alt="AI matching illustration"
                 className="w-full h-auto rounded-3xl shadow-2xl"
+                width={500}
+                height={500}
               />
             </div>
           </div>
           <Separator className="my-24 bg-gray-200" />
           <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
             <div className="order-2 md:order-1">
-              <img
+              <Image
                 src="/placeholder-image-3.svg"
                 alt="GPT learning illustration"
                 className="w-full h-auto rounded-3xl shadow-2xl"
+                width={500}
+                height={500}
               />
             </div>
             <div className="order-1 md:order-2 space-y-6">

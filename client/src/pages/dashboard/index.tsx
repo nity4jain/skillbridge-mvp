@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 
 export default function Dashboard() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const router = useRouter();
 
  useEffect(() => {
@@ -12,7 +12,7 @@ export default function Dashboard() {
   } else if (session?.user?.role === "mentor") {
     router.push("/dashboard/mentor");
   }
-}, [session]);
+}, [router, session?.user?.role]);
 
   return <div>Loading dashboard...</div>;
 }
